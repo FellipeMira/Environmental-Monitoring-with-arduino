@@ -1,0 +1,161 @@
+---
+title: "Monitoramento com Arduino"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+  '': default
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Interpolação 
+
+```{r,warning=FALSE,message=F}
+library(spatstat)  # Used for the dirichlet tessellation function
+library(maptools)  # Used for conversion from SPDF to ppp
+library(raster)    # Used to clip out thiessen polygons
+library(gstat) # Use gstat's idw routine
+library(sp)    # Used for the spsample function
+library(tmap)
+
+sjc <- sf::st_read("sjc.shp")
+P <- rgdal::readOGR("interpolate/pontos_interpolação.shp",verbose = F)
+sanja <- rgdal::readOGR("sjc.shp",verbose = F)
+# Create a tessellated surface
+th  <-  as(dirichlet(as.ppp(P)), "SpatialPolygons")
+
+
+
+crs_sirgas <- sp::CRS(SRS_string = "EPSG:31983")
+# Create an empty grid where n is the total number of cells
+grd              <- as.data.frame(spsample(P, "regular", n=50000))
+names(grd)       <- c("X", "Y")
+coordinates(grd) <- c("X", "Y")
+gridded(grd)     <- TRUE  # Create SpatialPixel object
+fullgrid(grd)    <- TRUE  # Create SpatialGrid object
+
+# Add P's projection information to the empty grid
+crs_sirgas <- sp::CRS(SRS_string = "EPSG:31983")
+slot(P, "proj4string") <- crs_sirgas
+slot(th, "proj4string") <- crs_sirgas
+slot(sanja, "proj4string") <- crs_sirgas
+slot(grd, "proj4string") <- crs_sirgas
+
+# Interpolate the grid cells using a power value of 2 (idp=2.0)
+P.idw <- gstat::idw(umdd_sl ~ 1, P, newdata=grd, idp=2.0)
+
+# Convert to raster object then clip to Texas
+r       <- raster(P.idw)
+r.m     <- mask(r, sanja)
+
+
+# Interpolate the grid cells using a power value of 2 (idp=2.0)
+P.idw2 <- gstat::idw(umidade ~ 1, P, newdata=grd, idp=2.0)
+
+# Convert to raster object then clip to Texas
+r2       <- raster(P.idw2)
+r.m2     <- mask(r, sanja)
+
+# Interpolate the grid cells using a power value of 2 (idp=2.0)
+P.idw3 <- gstat::idw(temprtr ~ 1, P, newdata=grd, idp=2.0)
+
+# Convert to raster object then clip to Texas
+r3       <- raster(P.idw3)
+r.m3     <- mask(r, sanja)
+
+
+# Plot
+tmap_mode("view")
+x<-tm_shape(sjc)+
+  tm_borders("gray3")+
+  tm_shape(r) + 
+  
+  tm_raster(n=10,
+            palette = viridis::magma(10), auto.palette.mapping = FALSE,
+            title="Umidade do solo") + 
+  
+  tm_shape(r2) + 
+  
+  tm_raster(n=10,
+            palette = viridis::magma(10), auto.palette.mapping = FALSE,
+            title="Umidade atmosférica [%]") + 
+  
+  tm_shape(r3) + 
+  
+  tm_raster(n=10,
+            palette = viridis::magma(10), auto.palette.mapping = FALSE,
+            title="Temperatura [ºC]") + 
+  
+  tm_shape(P) + 
+  tm_dots(size=0.05,col = "white") +
+  tm_legend(legend.outside=TRUE)
+
+x
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Série Temporal
+
+```{r,warning=FALSE,message=F}
+library(tidyverse)
+library(plotly)
+
+ts <- read_csv("dados_ts/DADOSAMB.TXT")
+
+gg1 <-ts %>% 
+  group_by(hora = lubridate::hour(hora)) %>% 
+  summarise_at(vars(umidade_solo:temperatura), mean ,na.rm=T) %>% 
+  as_tibble() %>% 
+  ggplot(.,aes(x=hora))+
+  geom_line(aes(y=umidade_solo, colour = "Umidade Solo"))+
+  geom_line(aes(y=umidade,colour="umidade"))+
+  geom_line(aes(y=temperatura,color = "temperatura"))+
+  ylab(" ")+
+  theme_light() 
+
+ggplotly(gg1)
+```
+
+### Quartis
+
+```{r}
+library(tidyverse)
+library(plotly)
+
+rm(ts)
+
+ts <- read_csv("dados_ts/DADOSAMB.TXT")
+
+ts<-ts %>% mutate(hora = as_factor(lubridate::hour(hora)))
+
+ts %>%
+  
+  mutate(umidade_solo = umidade_solo/10) %>% 
+  
+  select( c("hora","umidade_solo","umidade","temperatura"))%>% 
+  
+  pivot_longer(!hora,
+                    names_to = "variaveis",
+                    values_to = "value") ->ts
+
+
+gg2 <- ggplot(ts)+
+     geom_boxplot(aes(y=value,
+                 x=variaveis))+
+    ylab(" ")+
+    xlab("Variáveis")+
+    ylim(0,80)+
+    theme_light()
+plotly::ggplotly(gg2)
+```
+
