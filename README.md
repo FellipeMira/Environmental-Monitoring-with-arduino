@@ -5,4 +5,4 @@ Using APIs and bots (telegram) to access data from spatially distributed arduino
 `{sp, sf, arduinor, tidyverse, plotly, maptools, spatstat, raster, telegram.bot}`
 
 ### The flowchart of the processes can be explained by the figure below
-![alt text](flowchart.png)
+![alt text](/img/flowchart.png)
