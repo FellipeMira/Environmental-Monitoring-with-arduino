@@ -4,9 +4,8 @@ Using APIs and bots (telegram) to access data from spatially distributed arduino
 ### libraries were used:
 `{sp, sf, arduinor, tidyverse, plotly, maptools, spatstat, raster, telegram.bot}`
 
+
+### The monitoring performed by the arduino systems is observed in real time by the project. This monitoring is accessed by a smartphone, using a bot created in the app telegram.  
+
 ### The flowchart of the processes can be explained by the figure below
-<img
-  src="/img/flowchart.jpg"
-  alt="Alt text"
-  title="Optional title"
-  style="display: inline-block; margin: 0 auto; max-width: 300px">
+![alt text](/img/flowchart.png)
