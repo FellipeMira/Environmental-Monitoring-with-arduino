@@ -11,7 +11,7 @@ bairros <- sf::st_read("bairros/BAIRROS.shp")
 con <- ar_init("/dev/ttyACM0", baud = 9600)
 
 bot <- Bot("5482989767:AAF1eTWrZSmFxrr8KtAGnpsnsEVFT4cfYoo")
-updater <- Updater(token = "5482989767:AAF1eTWrZSmFxrr8KtAGnpsnsEVFT4cfYoo")
+updater <- Updater(token = "MY_TOLKEN")
 print(bot$getMe())
 #Funcao start
 start <- function(bot, update)
