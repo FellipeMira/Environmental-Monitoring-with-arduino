@@ -1,4 +1,4 @@
-# Environmental-Monitoring-with-arduino
+# Environmental Monitoring with arduino
 Using APIs and bots (telegram) to access data from spatially distributed arduino sensors
 
 ### libraries were used:
