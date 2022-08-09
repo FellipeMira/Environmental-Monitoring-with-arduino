@@ -10,6 +10,7 @@ Using APIs and bots (telegram) to access data from spatially distributed arduino
 * RTC
 * SD card module
 * Soil Moisture Sensor
+
 ![alt text1](/img/sensor.jpeg)
 
 ### The monitoring performed by the arduino systems is observed in real time by the project. This monitoring is accessed by a smartphone, using a bot created in the app telegram.  
